@@ -79,7 +79,13 @@ global_config.bat is in `Auto\config`
   - You can get encrypted password by following the below steps
     - Open WebUI
     - Go to **Config mode**
-    - Editting...
+    - Open **Cluster Properties**
+    - Go to **Account** Tab
+    - Click **Add**
+    - Input **Administrator** as **User Name**
+    - Input **Password**
+    - Export the configuration file
+    - Encrypted password is described in **\<password\>** in **clp.conf**
 
 If you use Router VM, please edit the below parameters
 
