@@ -3,7 +3,7 @@ $hostnameS = $env:SECONDARY_HOSTNAME
 $ipP = $env:PRIMARY_IP_ADDRESS
 $ipS = $env:SECONDARY_IP_ADDRESS
 
-$vmName = $env:VM_NAME
+$vmName = $env:APP_VM_NAME
 
 # Start VM replication
 $fqdnP = $hostnameP + ".hyperv.local"

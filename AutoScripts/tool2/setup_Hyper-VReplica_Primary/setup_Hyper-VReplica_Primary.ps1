@@ -3,9 +3,9 @@ $hostnameS = $env:SECONDARY_HOSTNAME
 $ipP = $env:PRIMARY_IP_ADDRESS
 $ipS = $env:SECONDARY_IP_ADDRESS
 $pw = $env:CERT_FILE_PASSWORD
-$vmPath = $env:VM_PATH
-$vmId = $env:VM_ID
-$vmName = $env:VM_NAME
+$vmPath = $env:APP_VM_PATH
+$vmId = $env:APP_VM_ID
+$vmName = $env:APP_VM_NAME
 $vmPubSwitch = "public-network"
 $vmAppSwitch = "application-network"
 

@@ -77,8 +77,8 @@ function delete_kvp ($key, $vmName) {
 $validationFlag = $True
 $vmName = "RouterVM_template"
 $appVmName = $env:APP_VM_NAME
-$vmPath = $env:VM_PATH
-$vmId = $env:VM_ID
+$vmPath = $env:ROUTER_VM_PATH
+$vmId = $env:ROUTER_VM_ID
 $vmcxPath = $vmPath + "\" + $vmId + ".vmcx"
 #$vmPubSwitch = $env:VM_SWITCH_PUB_NAME
 #$vmAppSwitch = $env:VM_SWITCH_APP_NAME
@@ -90,14 +90,14 @@ $vmNIC0MAC = "null"
 $vmNIC1MAC = "null"
 $pubMAC = "null"
 $appMAC = "null"
-$ipPub = $env:IP_ADDRESS_TO_PUB
-$netPub = $env:NETWORK_OF_PUB
-$ipPubSubnet = $env:SUBNET_PUB
-$ipApp = $env:IP_ADDRESS_TO_APP
-$netApp = $env:NETWORK_OF_APP
-$ipAppSubnet = $env:SUBNET_APP
-$ipDns = $env:IP_ADDRESS_TO_DNS
-$ipGateway = $env:IP_ADDRESS_TO_GATEWAY
+$ipPub = $env:SECONDARY_IP_ADDRESS_TO_PUB
+$netPub = $env:SECONDARY_NETWORK_OF_PUB
+$ipPubSubnet = $env:SECONDARY_SUBNET_PUB
+$ipApp = $env:SECONDARY_IP_ADDRESS_TO_APP
+$netApp = $env:SECONDARY_NETWORK_OF_APP
+$ipAppSubnet = $env:SECONDARY_SUBNET_APP
+$ipDns = $env:SECONDARY_IP_ADDRESS_TO_DNS
+$ipGateway = $env:SECONDARY_IP_ADDRESS_TO_GATEWAY
 $keyList = @("init", "key", "NIC0MAC", "NIC1MAC", "ipPub", "netPub", "ipApp", "netApp", "ipDns", "ipGateway", "ip", "MAC");
 
 

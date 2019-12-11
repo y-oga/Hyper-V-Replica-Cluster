@@ -1,0 +1,166 @@
+# Create Hyper-V Replica cluster automatically
+
+## About this tool
+
+This tool enables an user to create Hyper-V Replica cluster automatically.
+
+You can choose a completed cluster from 2 types of cluster.
+
+- With Router VM
+
+(Editting image)
+
+<br/>
+
+- Without Router VM
+
+(Editting image)
+
+<br/>
+
+In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
+
+## System Requirement
+
+- 2 Windows Server
+  - OS: Windows Server 2016, 2019
+  - 2 servers are IP reachable each other
+
+## How to use Automation-tool
+
+### Premise
+
+- OS has already been installed on **both servers**.
+- Windows Administrator password are same between both servers.
+- IP address has already been set in **both servers**.
+  - 2 servers are IP reachable each other.
+- If you use Router VM, copy **RouterVM** image to same path in **both servers**.
+- Copy the Hyper-V VM image that you want to protect using EXPRESSCLUSTER to somewhere in **primary server**.
+  - The VM has one network adapter.
+  - Before you export the VM image, please detach a virtual switch from a network adapter of the VM.
+- Before copying **AutoScripts** to both servers, edit **global_config.bat** in `Auto\config`
+  - The way to edit the config file is described below.
+- Copy **AutoScripts** to somewhere in **both servers**.
+
+
+### How to edit global_config.bat
+
+global_config.bat is in `Auto\config`
+- ECX_PATH
+  - Path of EXPRESSCLUSTER
+  - The path where includes **menu.exe**
+- PRIMARY_HOSTNAME
+  - Hostname of primary server
+- PRIMARY_IP_ADDRESS
+  - IP address of primary server
+- SECONDARY_HOSTNAME
+  - Hostname of secondary server
+- SECONDARY_IP_ADDRESS
+  - IP address of secondary server
+- CERT_FILE_PASSWORD
+  - Password of certificates for Hyper-V Replica
+  - Please set any value
+- APP_VM_PATH
+  - Path of VM that you want to protect using EXPRESSCLUSTER
+    - **Virtual Machines** folder
+- APP_VM_ID
+  - ID of VM that you want to protect using EXPRESSCLUSTER
+  - VM ID is described in vmcx file name
+    - \<VM ID\>.vmcx
+- APP_VM_NAME
+  - Name of VM that you want to protect using EXPRESSCLUSTER
+- LCNS_PATH
+  - Path of EXPRESSCLUSTER license file.
+- ECX_OR_CLP
+  - If you use EXPRESSCLUSTER, set ECX
+  - If you use CLUSTERPRO, set CLP
+- ADMIN_PASS
+  - Windows Administrator Password encrypted by EXPRESSCLUSTER WebUI
+  - You can get encrypted password by following the below steps
+    - Open WebUI
+    - Go to **Config mode**
+    - Editting...
+
+If you use Router VM, please edit the below parameters
+
+- ROUTER_VM_PATH
+  - Path of Router VM
+    - **Virtual Machines** folder
+- ROUTER_VM_ID
+  - ID of Router VM
+  - VM ID is described in vmcx file name
+    - \<VM ID\>.vmcx
+- VM_SWITCH_PUB_NAME
+  - Do not need to edit
+- VM_SWITCH_APP_NAME
+  - Do not need to edit
+- PRIMARY_IP_ADDRESS_TO_PUB
+  - IP address of Router VM which connects to host server
+- PRIMARY_NETWORK_OF_PUB
+  - Network address of Router VM which connects to host server
+- PRIMARY_SUBNET_PUB
+  - Subnet mask of Router VM which connects to host server
+- PRIMARY_IP_ADDRESS_TO_APP
+  - IP address of Router VM which connects to protected VM
+- PRIMARY_NETWORK_OF_APP
+  - Network address of Router VM which connects to protected VM
+- PRIMARY_SUBNET_APP
+  - Subnet mask of Router VM which connects to protected VM
+- PRIMARY_IP_ADDRESS_TO_DNS
+  - IP address of DNS
+- PRIMARY_IP_ADDRESS_TO_GATEWAY
+  - IP address of gateway
+- SECONDARY_IP_ADDRESS_TO_PUB
+  - IP address of Router VM which connects to host server
+- SECONDARY_NETWORK_OF_PUB
+  - Network address of Router VM which connects to host server
+- SECONDARY_SUBNET_PUB
+  - Subnet mask of Router VM which connects to host server
+- SECONDARY_IP_ADDRESS_TO_APP
+  - IP address of Router VM which connects to protected VM
+- SECONDARY_NETWORK_OF_APP
+  - Network address of Router VM which connects to protected VM
+- SECONDARY_SUBNET_APP
+  - Subnet mask of Router VM which connects to protected VM
+- SECONDARY_IP_ADDRESS_TO_DNS
+  - IP address of DNS
+- SECONDARY_IP_ADDRESS_TO_GATEWAY
+  - IP address of gateway
+
+### Execute Automation-tool
+
+1. Execute **tool1** on both servers
+  - **install_softwares_Primary.bat** in `AutoScripts\tool1\install_softwares_Primary` on primary server
+  - **install_softwares_Secondary.bat** in `AutoScripts\tool1\install_softwares_Secondary` on secondary server
+2. Wait for both servers to reboot
+3. Copy two certificate files to `AutoScripts\tool2\setup_Hyper-VReplica_Secondary` on secondary server
+  - **CertRecTestRoot.cer** and **\<secondary hostname\>.hyperv.local.pfx** is generated in `AutoScripts\tool1\install_softwares_Primary` on primary server
+4. Execute **tool2** on both servers
+  - **setup_Hyper-VReplica_Primary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Primary` on primary server
+  - **setup_Hyper-VReplica_Secondary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Secondary` on secondary server
+5. Enable Hyper-V Replica on both servers
+  - Open **Hyper-V Manager**
+  - Right-click server name
+  - Click **Hyper-V Settings**
+  - Click **Replication Configuration**
+  - Check **Enable this computer as a Replica server**
+  - Check **Use certificate-based Authentication (HTTPS):**
+  - Click **Select Certificate**
+  - Click **OK** in Select certificate dialog
+  - Check **Allow replication from any authenticated server**
+  - Click **Apply**
+  - Click **OK** in Settings dialog
+  - Click **OK**
+- Execute **tool3** on primary server
+  - **start_VMreplication.bat** in `AutoScripts\tool3\start_VMreplication_Primary`
+- Execute **tool4** on both servers
+  - **setup_routerVM_Primary.bat** in `AutoScripts\tool4\setup_routerVM_Primary` on primary server
+  - **setup_routerVM_Secondary.bat** in `AutoScripts\tool4\setup_routerVM_Secondary` on secondary server
+- Execute **tool5** on primary server
+  - **setup_ecx.bat** in `AutoScripts\tool5\setup_ecx_Primary`
+  - Please press just Enter when creating ssh key
+- Execute **tool6** on secondary server
+  - **reboot_webmanager.bat** in `AutoScripts\tool6\reboot_webmanager_Secondary`
+
+## Detail of Automation-tool
+

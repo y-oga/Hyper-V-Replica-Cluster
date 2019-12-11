@@ -1,5 +1,5 @@
 $lcnsPath = $env:LCNS_PATH
-$ipPub = $env:IP_ADDRESS_TO_PUB
+$ipPub = $env:PRIMARY_IP_ADDRESS_TO_PUB
 $line = "root@" + $ipPub
 
 clplcnsc -i $lcnsPath
