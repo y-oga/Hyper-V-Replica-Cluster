@@ -1,6 +1,37 @@
 $lcnsPath = $env:LCNS_PATH
-$ipPub = $env:PRIMARY_IP_ADDRESS_TO_PUB
-$line = "root@" + $ipPub
+$product = $env:ECX_OR_CLP
+$pHostname = $env:PRIMARY_HOSTNAME
+$pIp = $env:PRIMARY_IP_ADDRESS
+$prIp = $env:PRIMARY_IP_ADDRESS_TO_PUB
+$sHostname = $env:SECONDARY_HOSTNAME
+$sIp = $env:SECONDARY_IP_ADDRESS
+$srIp = $env:SECONDARY_IP_ADDRESS_TO_PUB
+$targetVM = $env:APP_VM_NAME
+$adminPass = $env:ADMIN_PASS
+
+$path = ".\scripts\failover\replica_script\cluster_config.bat"
+$file_contents = $(Get-Content $path) -creplace "INPUT_PRIMARY_HOSTNAME",$pHostname
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_PRIMARY_IP_ADDRESS",$prIp
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_PRIMARY_HOST_IP_ADDRESS",$pIp
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_SECONDARY_HOSTNAME",$sHostname
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_SECONDARY_IP_ADDRESS",$srIp
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_SECONDARY_HOST_IP_ADDRESS",$sIp
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+$file_contents = $(Get-Content $path) -creplace "INPUT_TARGET_VM_NAME",$targetVM
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+
+<#
+$path = ".\clp.conf"
+$file_contents = $(Get-Content $path) -creplace "INPUT_PASS",$adminPass
+$file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
+#>
+
+$line = "root@" + $prIp
 
 clplcnsc -i $lcnsPath
 clpcl -t -a
@@ -9,7 +40,11 @@ clpcfctrl --push -w -x .
 
 clpcl -r --web --alert
 
-Copy-Item ".\trnreq" -Destination "C:\Program Files\CLUSTERPRO\work" -Recurse
+$path = "C:\Program Files\EXPRESSCLUSTER\work"
+if ($product -eq "CLP") {
+    $path = "C:\Program Files\CLUSTERPRO\work"
+}
+Copy-Item ".\trnreq" -Destination $path -Recurse
 ssh -q -o StrictHostKeyChecking=no $line "nmcli c down eth1"
 ssh -q -o StrictHostKeyChecking=no $line "nmcli c up eth1"
 
