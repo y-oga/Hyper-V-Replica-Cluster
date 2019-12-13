@@ -36,4 +36,4 @@ New-VMSwitch -name $vmPubSwitch -NetAdapterName "Ethernet" -AllowManagementOS $t
 New-VMSwitch -name $vmAppSwitch -SwitchType "Private"
 
 # Attach virtual switched to RouterVM and ApplicationVM
-Connect-VMNetworkAdapter -VMName "ApplicationVM" -Name "Network Adapter" -SwitchName "application-network"
+Connect-VMNetworkAdapter -VMName $vmName -Name "Network Adapter" -SwitchName $vmAppSwitch
