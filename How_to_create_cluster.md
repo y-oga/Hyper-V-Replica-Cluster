@@ -23,7 +23,7 @@ In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
 ## System Requirement
 
 - 2 Windows Server
-  - OS: Windows Server 2016, 2019
+  - OS: Windows Server 2019
   - 2 servers are IP reachable each other
 
 ## How to use Automation-tool
