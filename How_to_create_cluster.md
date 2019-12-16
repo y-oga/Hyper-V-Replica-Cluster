@@ -65,8 +65,9 @@ global_config.bat is in `Auto\config`
     - **Virtual Machines** folder
 - APP_VM_ID
   - ID of VM that you want to protect using EXPRESSCLUSTER
-  - VM ID is described in vmcx file name
-    - \<VM ID\>.vmcx
+  - VM ID is described in vmcx file name or xml file
+    - \<VM ID\>.vmcx (Windows Server 2016 or later)
+    - \<VM ID\>.XML (Windows Server 2012)
 - APP_VM_NAME
   - Name of VM that you want to protect using EXPRESSCLUSTER
 - LCNS_PATH
@@ -95,7 +96,8 @@ If you use Router VM, please edit the below parameters
 - ROUTER_VM_ID
   - ID of Router VM
   - VM ID is described in vmcx file name
-    - \<VM ID\>.vmcx
+    - \<VM ID\>.vmcx (Windows Server 2016 or later)
+    - \<VM ID\>.XML (Windows Server 2012)
 - VM_SWITCH_PUB_NAME
   - Do not need to edit
 - VM_SWITCH_APP_NAME

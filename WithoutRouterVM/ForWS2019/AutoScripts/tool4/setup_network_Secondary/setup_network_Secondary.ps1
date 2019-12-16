@@ -1,5 +1,5 @@
 $appVmName = $env:APP_VM_NAME
-$vmAppSwitch = "public-network"
+$vmPubSwitch = "public-network"
 
 
 Write-Host "Attaching virtual switch to ApplicationVM..."
