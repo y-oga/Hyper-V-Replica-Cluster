@@ -221,5 +221,32 @@ If you use Windows Server 2012 R2, in advance, you need to create the certificat
 9. Execute **tool6** on secondary server
   - **reboot_webmanager.bat** in `AutoScripts\tool6\reboot_webmanager_Secondary`
 
-## Detail of ECX operation
+## Behavior after server's failure
 
+When the target VM is running on primary server,
+
+- Primary server's termination (like power failure)
+  - The target VM starts on secondary server
+- Secondary server's termination (like power failure)
+  - The target VM keeps running on primary server
+- Primary server's shutdown
+  - The target VM starts on secondary server
+  - After primary server's recovery, the target VM stops on secondary server, and starts on primary server
+- Secondary server's shutdown
+  - The target VM keeps running on primary server
+
+When the target VM is running on secondary server, vice versa.
+
+## Behavior after split brain
+
+When network between primary server and secondary server disconnects,
+
+- If the target VM is running on primary server
+  - The target VM starts likewise on secondary server
+  - After the network recovers, secondary server reboots
+  - The target VM keeps running on primary server
+- If the target VM is running on secondary server
+  - The target VM starts likewise on primary server
+  - After the network recovers, secondary server reboots
+  - After secondary server reboots, the target VM stops on primary server
+  - After initial replication of the target VM, the target VM starts on primary server
