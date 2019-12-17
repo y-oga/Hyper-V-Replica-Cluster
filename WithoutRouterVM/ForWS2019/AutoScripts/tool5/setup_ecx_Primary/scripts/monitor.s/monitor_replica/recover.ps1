@@ -1,5 +1,5 @@
 #
-# Oct 30 2019
+# Dec 17 2019
 #
 
 $hostname = hostname
@@ -264,8 +264,14 @@ while (1) {
             }
         } else {
             #
-            # If there are any other patterns, please add new IF
+            # Split brain CASE1
             #
+            try {
+                Stop-VM -Name $targetVMName -ComputerName $oppositeFQDN -Force -Confirm:$False
+                Stop-VMFailover -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+            } catch {
+                exit 1
+            }
         }
     } elseif ($ownRep.State -eq "Replicating") {
         if ($oppRep.State -eq "Error") {

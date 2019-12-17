@@ -23,7 +23,7 @@ In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
 ## System Requirement
 
 - 2 Windows Server
-  - OS: Windows Server 2019
+  - OS: Windows Server 2012 R2 or later
   - 2 servers are IP reachable each other
 
 ## How to use Automation-tool
@@ -34,14 +34,15 @@ In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
 - Windows Administrator password are same between both servers.
 - IP address has already been set in **both servers**.
   - 2 servers are IP reachable each other.
-- If you use Router VM, copy **RouterVM** image to same path in **both servers**.
 - Copy the Hyper-V VM image that you want to protect using EXPRESSCLUSTER to somewhere in **primary server**.
   - The VM has one network adapter.
   - Before you export the VM image, please detach a virtual switch from a network adapter of the VM.
 - Before copying **AutoScripts** to both servers, edit **global_config.bat** in `Auto\config`
   - The way to edit the config file is described below.
 - Copy **AutoScripts** to somewhere in **both servers**.
-
+- If you use Router VM, copy **RouterVM** image to same path in **both servers**.
+- If you use Windows Server 2012 R2, in advance, you need to create certificates on Windows 10 or Windows Server 2016 or Windows Server 2019.
+  - The way to create certificates is described below.
 
 ### How to edit global_config.bat
 
@@ -135,7 +136,54 @@ If you use Router VM, please edit the below parameters
 - SECONDARY_IP_ADDRESS_TO_GATEWAY
   - IP address of gateway
 
-### Execute Automation-tool
+### How to create certificates for Hyper-V Replica
+
+If you use Windows Server 2012 R2, in advance, you need to create the certificates on Windows 10 or Windows Server 2016 or Windows Server 2019.
+
+1. Edit **config.bat** in **makecert**
+  - Each values must be identical with each values in **glocal_config.bat**
+2. Execute **makecert.bat** in **makecert**
+  - 3 certificates are created in **makecert**
+    - **CertRecTestRoot.cer**
+    - **\<primary hostname\>.hyperv.local.pfx** 
+    - **\<secondary hostname\>.hyperv.local.pfx** 
+3. Copy **CertRecTestRoot.cer** and **\<primary hostname\>.hyperv.local.pfx** to `AutoScripts\tool2\setup_Hyper-VReplica_Primary` folder on primary server
+4. Copy **CertRecTestRoot.cer** and **\<secondary hostname\>.hyperv.local.pfx** to `AutoScripts\tool2\setup_Hyper-VReplica_Secondary` folder on secondary server
+
+### Execute Automation-tool (Windows Server 2012 R2)
+
+1. Execute **tool1** on both servers
+  - **install_softwares_Primary.bat** in `AutoScripts\tool1\install_softwares_Primary` on primary server
+  - **install_softwares_Secondary.bat** in `AutoScripts\tool1\install_softwares_Secondary` on secondary server
+2. Wait for both servers to reboot
+3. Execute **tool2** on both servers
+  - **setup_Hyper-VReplica_Primary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Primary` on primary server
+  - **setup_Hyper-VReplica_Secondary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Secondary` on secondary server
+4. Enable Hyper-V Replica on both servers
+  - Open **Hyper-V Manager**
+  - Right-click server name
+  - Click **Hyper-V Settings**
+  - Click **Replication Configuration**
+  - Check **Enable this computer as a Replica server**
+  - Check **Use certificate-based Authentication (HTTPS):**
+  - Click **Select Certificate**
+  - Click **OK** in Select certificate dialog
+  - Check **Allow replication from any authenticated server**
+  - Click **Apply**
+  - Click **OK** in Settings dialog
+  - Click **OK**
+5. Execute **tool3** on primary server
+  - **start_VMreplication.bat** in `AutoScripts\tool3\start_VMreplication_Primary`
+6. Execute **tool4**
+  - Without Router VM
+    - **setup_network_Secondary.bat** in `AutoScripts\tool4\setup_network_Secondary` on secondary server
+7. Execute **tool5** on primary server
+  - **setup_ecx.bat** in `AutoScripts\tool5\setup_ecx_Primary`
+  - Please press just Enter when creating ssh key
+8. Execute **tool6** on secondary server
+  - **reboot_webmanager.bat** in `AutoScripts\tool6\reboot_webmanager_Secondary`
+
+### Execute Automation-tool (Windows Server 2016 or later)
 
 1. Execute **tool1** on both servers
   - **install_softwares_Primary.bat** in `AutoScripts\tool1\install_softwares_Primary` on primary server
@@ -159,19 +207,19 @@ If you use Router VM, please edit the below parameters
   - Click **Apply**
   - Click **OK** in Settings dialog
   - Click **OK**
-- Execute **tool3** on primary server
+6. Execute **tool3** on primary server
   - **start_VMreplication.bat** in `AutoScripts\tool3\start_VMreplication_Primary`
-- Execute **tool4**
+7. Execute **tool4**
   - With Router VM
     - **setup_routerVM_Primary.bat** in `AutoScripts\tool4\setup_routerVM_Primary` on primary server
     - **setup_routerVM_Secondary.bat** in `AutoScripts\tool4\setup_routerVM_Secondary` on secondary server
   - Without Router VM
     - **setup_network_Secondary.bat** in `AutoScripts\tool4\setup_network_Secondary` on secondary server
-- Execute **tool5** on primary server
+8. Execute **tool5** on primary server
   - **setup_ecx.bat** in `AutoScripts\tool5\setup_ecx_Primary`
   - Please press just Enter when creating ssh key
-- Execute **tool6** on secondary server
+9. Execute **tool6** on secondary server
   - **reboot_webmanager.bat** in `AutoScripts\tool6\reboot_webmanager_Secondary`
 
-## Detail of Automation-tool
+## Detail of ECX operation
 

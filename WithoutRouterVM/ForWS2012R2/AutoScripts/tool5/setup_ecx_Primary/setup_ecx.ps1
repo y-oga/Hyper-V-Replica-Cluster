@@ -46,8 +46,6 @@ if ($product -eq "CLP") {
     $path = "C:\Program Files\CLUSTERPRO\work"
 }
 Copy-Item ".\trnreq" -Destination $path -Recurse
-ssh -q -o StrictHostKeyChecking=no $line "nmcli c down eth1"
-ssh -q -o StrictHostKeyChecking=no $line "nmcli c up eth1"
 
 clpcl -s -a
 
