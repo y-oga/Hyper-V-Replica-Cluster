@@ -225,14 +225,9 @@ If you use Windows Server 2012 R2, in advance, you need to create the certificat
 
 When the target VM is running on primary server,
 
-- Primary server's termination (like power failure)
+- Primary server's shutdown or power failure
   - The target VM starts on secondary server
-- Secondary server's termination (like power failure)
-  - The target VM keeps running on primary server
-- Primary server's shutdown
-  - The target VM starts on secondary server
-  - After primary server's recovery, the target VM stops on secondary server, and starts on primary server
-- Secondary server's shutdown
+- Secondary server's shutdown or power failure
   - The target VM keeps running on primary server
 
 When the target VM is running on secondary server, vice versa.

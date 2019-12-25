@@ -1,5 +1,5 @@
 #
-# Dec 17 2019
+# Dec 25 2019
 #
 
 $hostname = hostname
@@ -174,6 +174,13 @@ while (1) {
         continue
     }
 
+    if (($ownRep.State -eq "Suspended") -And ($ownRep.Mode -eq "Primary")) {
+        Resume-VMReplication -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
+    }
+    if (($oppRep.State -eq "Suspended") -And ($oppRep.Mode -eq "Primary")) {
+        Resume-VMReplication -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+    }
+
     if ($ownRep.State -eq "FailedOverWaitingCompletion") {
         #
         # This scope is executed only on Replica server.
@@ -181,12 +188,29 @@ while (1) {
         #
         if ($oppRep.State -eq "Error") {
             #
-            # OS shutdown scenario STEP 1/2
+            # OS shutdown scenario STEP 1/4
+            #
+            if ($oppVM.State -ne "Off") {
+                try {
+                    Remove-VMSavedState -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+                } catch {
+                    exit 1
+                }
+            }
+            #
+            # OS shutdown scenario STEP 2/4
             #
             try {
-                Stop-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
+                clprexec --script "recover.bat" -h $oppositeIp
             } catch {
                 exit 1
+            }
+
+            while (1) {
+                $oppRep = Get-VMReplication -VMName $targetVMName -ComputerName $oppositeFQDN
+                if ($oppRep.State -eq "WaitingForInitialReplication") {
+                    break
+                }
             }
         } elseif ($oppRep.State -eq "WaitingForStartResynchronize") {
             #
@@ -210,6 +234,7 @@ while (1) {
         } elseif ($oppRep.State -eq "WaitingForInitialReplication") {
             #
             # Forced termination scenario STEP 2/3
+            # OS shutdown scenario STEP 3/4
             #
             try {
                 Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Certificate" -CertificateThumbprint $ownThumbprint -Confirm:$False
@@ -237,6 +262,7 @@ while (1) {
         if ($oppRep.State -eq "WaitingForInitialReplication") {
             #
             # Forced termination scenario STEP 3/3
+            # OS shutdown scenario STEP 4/4
             #
             try {
                 Start-VMInitialReplication -VMName $targetVMName -ComputerName $ownFQDN
