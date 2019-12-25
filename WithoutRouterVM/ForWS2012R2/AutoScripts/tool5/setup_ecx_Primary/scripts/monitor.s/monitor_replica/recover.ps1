@@ -292,8 +292,14 @@ while (1) {
             #
             # Split brain CASE1
             #
+            if ($oppVM.State -ne "Off") {
+                try {
+                    Remove-VMSavedState -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+                } catch {
+                    exit 1
+                }
+            }
             try {
-                Stop-VM -Name $targetVMName -ComputerName $oppositeFQDN -Force -Confirm:$False
                 Stop-VMFailover -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
             } catch {
                 exit 1
