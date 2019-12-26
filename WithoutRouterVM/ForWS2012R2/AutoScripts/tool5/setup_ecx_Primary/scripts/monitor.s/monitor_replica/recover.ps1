@@ -1,5 +1,5 @@
 #
-# Dec 25 2019
+# Dec 26 2019
 #
 
 $hostname = hostname
@@ -292,6 +292,20 @@ while (1) {
             #
             # Split brain CASE1
             #
+
+            #
+            # Exclude Split brain CASE2
+            #
+            try {
+                $ownVM = Get-VM -VMName $targetVMName -ComputerName $ownFQDN -ErrorAction stop
+                $oppVM = Get-VM -VMName $targetVMName -ComputerName $oppositeFQDN -ErrorAction stop
+            } catch {
+                exit 0
+            }
+            if (($ownVM.State -eq "Running") -And ($oppVM.State -eq "Running")) {
+                continue
+            }
+
             if ($oppVM.State -ne "Off") {
                 try {
                     Remove-VMSavedState -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
