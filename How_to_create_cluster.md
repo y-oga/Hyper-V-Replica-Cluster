@@ -234,14 +234,8 @@ When the target VM is running on secondary server, vice versa.
 
 ## Behavior after split brain
 
-When network between primary server and secondary server disconnects,
+When network between primary server and secondary server disconnects, the target VM starts on both servers. (Dual activation)
 
-- If the target VM is running on primary server
-  - The target VM starts likewise on secondary server
-  - After the network recovers, secondary server reboots
-  - The target VM keeps running on primary server
-- If the target VM is running on secondary server
-  - The target VM starts likewise on primary server
-  - After the network recovers, secondary server reboots
-  - After secondary server reboots, the target VM stops on primary server
-  - After initial replication of the target VM, the target VM starts on primary server
+After the network recovers, secondary server shuts down as NP resolution of EXPRESSCLUSTER.
+
+The target VM keeps running on primary server through before NP resolution and after NP resolution.
