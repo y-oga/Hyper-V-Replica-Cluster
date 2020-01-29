@@ -7,6 +7,9 @@ $sIp = $env:SECONDARY_IP_ADDRESS
 $targetVM = $env:APP_VM_NAME
 $adminPass = $env:ADMIN_PASS
 
+$pHostname = $pHostname.ToLower();
+$sHostname = $sHostname.ToLower();
+
 $path = ".\scripts\failover\replica_script\cluster_config.bat"
 $file_contents = $(Get-Content $path) -creplace "INPUT_PRIMARY_HOSTNAME",$pHostname
 $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $path -Encoding Byte
