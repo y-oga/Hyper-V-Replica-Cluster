@@ -3,7 +3,7 @@ $hostnameS = $env:SECONDARY_HOSTNAME
 $ipP = $env:PRIMARY_IP_ADDRESS
 $ipS = $env:SECONDARY_IP_ADDRESS
 $pw = $env:CERT_FILE_PASSWORD
-$vmPubSwitch = "public-network"
+$vmPubSwitch = "internal-network"
 
 # Check whether certificate exists.
 $path = ".\" + $hostnameS + ".hyperv.local.pfx"
@@ -40,5 +40,5 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\Replic
 $fqdnP = $hostnameP + ".hyperv.local"
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value $fqdnP -Force
 
-# Create Virtual Swithies
-New-VMSwitch -name $vmPubSwitch -NetAdapterName "Ethernet" -AllowManagementOS $true
+# Create Virtual Switches
+New-VMSwitch -name $vmPubSwitch -SwitchType "Internal"

@@ -23,7 +23,7 @@ $vmName = @($env:APP_VM_NAME1,
             $env:APP_VM_NAME4,
             $env:APP_VM_NAME5,
             $env:APP_VM_NAME6) 
-$vmPubSwitch = "public-network"
+$vmPubSwitch = "internal-network"
 
 # Check whether VM file exists.
 for ($i = 0; $i -lt $vmNum; $i++) {
@@ -82,8 +82,8 @@ for ($i = 0; $i -lt $vmNum; $i++) {
     Set-VM -Name $vmName[$i] -AutomaticStartAction "Nothing"
 }
 
-# Create Virtual Swithies
-New-VMSwitch -name $vmPubSwitch -NetAdapterName "Ethernet" -AllowManagementOS $true
+# Create Virtual Switches
+New-VMSwitch -name $vmPubSwitch -SwitchType "Internal"
 
 # Attach virtual switched to RouterVM and ApplicationVM
 for ($i = 0; $i -lt $vmNum; $i++) {
