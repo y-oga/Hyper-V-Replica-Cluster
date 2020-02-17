@@ -3,22 +3,140 @@
 ## About this tool
 
 This tool enables an user to create Hyper-V Replica cluster automatically.
+Application VM is replicated between 2 host servers by Hyper-V Replica.
+EXPRESSCLUSTER moves Application VM by controlling Hyper-V Replica when failover occurs.
 
-You can choose a completed cluster from 2 types of cluster.
+You can create a cluster both in LAN and in WAN.
 
-- With Router VM
+- LAN
+  - Production site and DR site belong to the same network.
 
-(Editting image)
+  ```
+  (LAN)
+  |
+  |      +--------------------------------+
+  |      | Windows Server 2012R2 or later |
+  |      |     EXPRESSCLUSTER             |
+  |      |     Hyper-V Replica            |
+  +------+   IP: 192.168.0.1/24           |
+  |      | +----------------------------+ |
+  |      | | Application VM             | |
+  |      | | IP: 192.168.0.10/24        | |
+  |      | +----------------------------+ |
+  |      +--------------------------------+
+  |
+  |
+  |      +--------------------------------+
+  |      | Windows Server 2012R2 or later |
+  |      |     EXPRESSCLUSTER             |
+  |------+     Hyper-V Replica            |
+  |      |   IP: 192.168.0.2/24           |
+  |      +--------------------------------+
+  |
+  ```
 
 <br/>
 
-- Without Router VM
+- WAN
+  - Production site and DR site belong to the different networks.
+  - You can have 2 type of solutions to replicate a VM with a same IP address.
+    - EXPRESSCLUSTER DDNS resource
 
-(Editting image)
+      DNS serve is required.
+
+
+      Active server sends DNS query to DNS server after failover. Client machine can access Application VM with the same hostname through failover and failback.
+
+      The packet from externel to Application VM is routed via NAT in a host server. 
+
+      ```
+      (Internet)
+      |               Production Site
+      |      +-------------------------------------+
+      |      | Windows Server 2012R2 or later      |
+      |      |     EXPRESSCLUSTER                  |
+      |      |     Hyper-V Replica                 |
+      |      |     Routing and Remote Access (NAT) |
+      +------+   IP: 192.168.1.1/24                |
+      |      | +----------------------------+      |
+      |      | | Application VM             |      |
+      |      | | IP: 192.168.100.10/24      |      |
+      |      | +----------------------------+      |
+      |      +-------------------------------------+
+      |
+      ~
+      ~
+      |               DR Site
+      |      +-------------------------------------+
+      |      | Windows Server 2012R2 or later      |
+      |      |     EXPRESSCLUSTER                  |
+      +------+     Hyper-V Replica                 |
+      |      |     Routing and Remote Access (NAT) |
+      |      |   IP: 192.168.2.2/24                |
+      |      +-------------------------------------+
+      |
+      ~
+      ~
+      |      +------------+
+      +------+ DNS Server |
+      |      +------------+
+      |
+      ```
+
+    - Router VM
+      
+      Router VM is required.
+      If you want to use this solution, please contact with Ogata to get Router VM.
+
+      Router VM sends OSPF information to all network routers in the same network after failover.
+
+      All network routers need to enable OSPF function.
+
+      ```
+      (Internet)
+      |               Production Site
+      |      +-------------------------------------+
+      |      | Windows Server 2012R2 or later      |
+      |      |     EXPRESSCLUSTER                  |
+      |      |     Hyper-V Replica                 |
+      |      |     Routing and Remote Access (NAT) |
+      +------+   IP: 192.168.1.1/24                |
+      |      | +-----------------------+           |
+      |      | | Router VM             |           |
+      |      | | IP: 192.168.1.10/24   |           |
+      |      | | IP: 192.168.100.1/24  |           |
+      |      | +-----------+-----------+           |
+      |      |             |                       |
+      |      | +-----------+----------------+      |
+      |      | | Application VM             |      |
+      |      | | IP: 192.168.100.10/24      |      |
+      |      | +----------------------------+      |
+      |      +-------------------------------------+
+      |
+      ~
+      ~
+      |               DR Site
+      |      +-------------------------------------+
+      |      | Windows Server 2012R2 or later      |
+      |      |     EXPRESSCLUSTER                  |
+      |      |     Hyper-V Replica                 |
+      |      |     Routing and Remote Access (NAT) |
+      +------+   IP: 192.168.2.2/24                |
+      |      | +-----------------------+           |
+      |      | | Router VM             |           |
+      |      | | IP: 192.168.2.10/24   |           |
+      |      | | IP: 192.168.100.1/24  |           |
+      |      | +-----------+-----------+           |
+      |      |             |                       |
+      |      | +-----------+----------------+      |
+      |      | | Application VM             |      |
+      |      | | IP: 192.168.100.10/24      |      |
+      |      | +----------------------------+      |
+      |      +-------------------------------------+
+      |
+      ```
 
 <br/>
-
-In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
 
 ## System Requirement
 
@@ -31,7 +149,7 @@ In both types of cluster, Application VM is protected by EXPRESSCLUSTER.
 ### Premise
 
 - OS has already been installed on **both servers**.
-- Windows Administrator password are same between both servers.
+- Windows Administrator password are the same between both servers.
 - IP address has already been set in **both servers**.
   - 2 servers are IP reachable each other.
 - Copy the Hyper-V VM image that you want to protect using EXPRESSCLUSTER to somewhere in **primary server**.
@@ -61,6 +179,8 @@ global_config.bat is in `Auto\config`
 - CERT_FILE_PASSWORD
   - Password of certificates for Hyper-V Replica
   - Please set any value
+- APP_VM_NUM
+  - The number of Application VMs
 - APP_VM_PATH
   - Path of VM that you want to protect using EXPRESSCLUSTER
     - **Virtual Machines** folder
@@ -178,10 +298,9 @@ If you use Windows Server 2012 R2, in advance, you need to create the certificat
   - Without Router VM
     - **setup_network_Secondary.bat** in `AutoScripts\tool4\setup_network_Secondary` on secondary server
 7. Execute **tool5** on primary server
-  - **setup_ecx.bat** in `AutoScripts\tool5\setup_ecx_Primary`
-  - Please press just Enter when creating ssh key
+  - **setup_ecx_Primary.bat** in `AutoScripts\tool5\setup_ecx_Primary`
 8. Execute **tool6** on secondary server
-  - **reboot_webmanager.bat** in `AutoScripts\tool6\reboot_webmanager_Secondary`
+  - **setup_ecx_Secondary.bat** in `AutoScripts\tool6\setup_ecx_Secondary`
 
 ### Execute Automation-tool (Windows Server 2016 or later)
 
