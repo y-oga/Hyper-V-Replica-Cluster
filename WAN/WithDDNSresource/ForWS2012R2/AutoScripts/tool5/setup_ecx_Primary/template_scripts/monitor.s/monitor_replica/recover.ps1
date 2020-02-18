@@ -18,6 +18,7 @@ $primaryHostname =  $env:PRIMARY_HOSTNAME
 $secondaryHostname =  $env:SECONDARY_HOSTNAME
 $primaryHostIp = $env:PRIMARY_HOST_IP_ADDRESS
 $secondaryHostIp = $env:SECONDARY_HOST_IP_ADDRESS
+$domain = $env:DOMAIN
 
 #
 # If primary server is shutdown and secondary server becomes active server,
@@ -31,15 +32,17 @@ $mode = $VMRepInfo.Mode
 $primaryFQDN = $VMRepInfo.PrimaryServer
 $secondaryFQDN = $VMRepInfo.ReplicaServer
 
-#
-# Get credential information of both servers.
-#
-$tmp = "CN=" + $primaryFQDN
-$tmp = ls cert:\LocalMachine\My | Where-Object {$_.Subject -eq $tmp}
-$primaryThumbprint = $tmp.Thumbprint
-$tmp = "CN=" + $secondaryFQDN
-$tmp = ls cert:\LocalMachine\My | Where-Object {$_.Subject -eq $tmp}
-$secondaryThumbprint = $tmp.Thumbprint
+if ($domain -eq "hyperv.local") {
+    #
+    # Get credential information of both servers.
+    #
+    $tmp = "CN=" + $primaryFQDN
+    $tmp = ls cert:\LocalMachine\My | Where-Object {$_.Subject -eq $tmp}
+    $primaryThumbprint = $tmp.Thumbprint
+    $tmp = "CN=" + $secondaryFQDN
+    $tmp = ls cert:\LocalMachine\My | Where-Object {$_.Subject -eq $tmp}
+    $secondaryThumbprint = $tmp.Thumbprint
+}
 
 #
 # Get information of opposite server.
@@ -49,51 +52,61 @@ $tmpPName = $tmpPNameList[0]
 $ownHostname = "null"
 $ownFQDN = "null"
 $ownIp = "null"
-$ownThumbprint = "null"
 $oppositeHostname = "null"
 $oppositeFQDN = "null"
 $oppositeIp = "null"
-$oppositeThumbprint = "null"
+if ($domain -eq "hyperv.local") {
+    $ownThumbprint = "null"
+    $oppositeThumbprint = "null"
+}
 
 if ($tmpPName -eq $primaryHostname) {
     if ($mode -eq "Primary") {
         $ownHostname = $primaryHostname
         $ownFQDN = $primaryFQDN
         $ownIp = $primaryHostIp
-        $ownThumbprint = $primaryThumbprint
         $oppositeHostname = $secondaryHostname
         $oppositeFQDN = $secondaryFQDN
         $oppositeIp = $secondaryHostIp
-        $oppositeThumbprint = $secondaryThumbprint
+        if ($domain -eq "hyperv.local") {
+            $ownThumbprint = $primaryThumbprint
+            $oppositeThumbprint = $secondaryThumbprint
+        }
     } else {
         $ownHostname = $secondaryHostname
         $ownFQDN = $secondaryFQDN
         $ownIp = $secondaryHostIp
-        $ownThumbprint = $secondaryThumbprint
         $oppositeHostname = $primaryHostname
         $oppositeFQDN = $primaryFQDN
         $oppositeIp = $primaryHostIp
-        $oppositeThumbprint = $primaryThumbprint
+        if ($domain -eq "hyperv.local") {
+            $ownThumbprint = $secondaryThumbprint
+            $oppositeThumbprint = $primaryThumbprint
+        }
     }
 } else {
     if ($mode -eq "Primary") {
         $ownHostname = $secondaryHostname
         $ownFQDN = $primaryFQDN
         $ownIp = $secondaryHostIp
-        $ownThumbprint = $primaryThumbprint
         $oppositeHostname = $primaryHostname
         $oppositeFQDN = $secondaryFQDN
         $oppositeIp = $primaryHostIp
-        $oppositeThumbprint = $secondaryThumbprint
+        if ($domain -eq "hyperv.local") {
+            $ownThumbprint = $primaryThumbprint
+            $oppositeThumbprint = $secondaryThumbprint
+        }
     } else {
         $ownHostname = $primaryHostname
         $ownFQDN = $secondaryFQDN
         $ownIp = $primaryHostIp
-        $ownThumbprint = $secondaryThumbprint
         $oppositeHostname = $secondaryHostname
         $oppositeFQDN = $primaryFQDN
         $oppositeIp = $secondaryHostIp
-        $oppositeThumbprint = $primaryThumbprint
+        if ($domain -eq "hyperv.local") {
+            $ownThumbprint = $secondaryThumbprint
+            $oppositeThumbprint = $primaryThumbprint
+        }
     }
 }
 #
@@ -239,7 +252,11 @@ while (1) {
             # OS shutdown scenario STEP 3/4
             #
             try {
-                Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Certificate" -CertificateThumbprint $ownThumbprint -Confirm:$False
+                if ($domain -eq "hyperv.local") {
+                    Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Certificate" -CertificateThumbprint $ownThumbprint -Confirm:$False
+                } else {
+                    Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Kerberos" -Confirm:$False
+                }
             } catch {
                 exit 1
             }

@@ -20,19 +20,18 @@ Install-WindowsFeature -Name "Hyper-V" -IncludeManagementTools
 Write-Host "Installing EXPRESSCLUSTER..."
 Start-Process $ecxSilentInstallPath -Wait -NoNewWindow
 
-# Change Primary DNS Suffix
-Write-Host "Changing Primary DNS Suffix..."
-$path = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"
-Set-ItemProperty $path -name "NV Domain" -value "hyperv.local"
+if ($domain -eq "hyperv.local") {
+    # Change Primary DNS Suffix
+    Write-Host "Changing Primary DNS Suffix..."
+    $path = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"
+    Set-ItemProperty $path -name "NV Domain" -value "hyperv.local"
 
-# Setup Certificate
-Write-Host "Setting up Certificate..."
-
-# Edit hosts file
-$fqdnP = $ipP + " " + $hostnameP + ".hyperv.local"
-Write-Output $fqdnP | Add-Content "C:\Windows\System32\drivers\etc\hosts" -Encoding Default
-$fqdnS = $ipS + " " + $hostnameS + ".hyperv.local"
-Write-Output $fqdnS | Add-Content "C:\Windows\System32\drivers\etc\hosts" -Encoding Default
+    # Edit hosts file
+    $fqdnP = $ipP + " " + $hostnameP + ".hyperv.local"
+    Write-Output $fqdnP | Add-Content "C:\Windows\System32\drivers\etc\hosts" -Encoding Default
+    $fqdnS = $ipS + " " + $hostnameS + ".hyperv.local"
+    Write-Output $fqdnS | Add-Content "C:\Windows\System32\drivers\etc\hosts" -Encoding Default
+}
 
 # Reboot
 Write-Host "This machine will reboot."

@@ -42,8 +42,8 @@ You can create a cluster both in LAN and in WAN.
   - You can have 2 type of solutions to replicate a VM with a same IP address.
     - EXPRESSCLUSTER DDNS resource
 
-      DNS serve is required.
-
+      DNS server is required.
+      Both host servers need to join Windows domain.
 
       Active server sends DNS query to DNS server after failover. Client machine can access Application VM with the same hostname through failover and failback.
 
@@ -159,7 +159,7 @@ You can create a cluster both in LAN and in WAN.
   - The way to edit the config file is described below.
 - Copy **AutoScripts** to somewhere in **both servers**.
 - If you use Router VM, copy **RouterVM** image to same path in **both servers**.
-- If you use Windows Server 2012 R2, in advance, you need to create certificates on Windows 10 or Windows Server 2016 or Windows Server 2019.
+- If both host servers do NOT join Windows domain, you need to create certificates in advance.
   - The way to create certificates is described below.
 
 ### How to edit global_config.bat
@@ -176,6 +176,9 @@ global_config.bat is in `Auto\config`
   - Hostname of secondary server
 - SECONDARY_IP_ADDRESS
   - IP address of secondary server
+- DOMAIN
+  - Domain to which 2 host servers belong
+  - If 2 host servers do NOT belong to Windows domain, please input *hyperv.local*.
 - CERT_FILE_PASSWORD
   - Password of certificates for Hyper-V Replica
   - Please set any value
@@ -258,7 +261,9 @@ If you use Router VM, please edit the below parameters
 
 ### How to create certificates for Hyper-V Replica
 
-If you use Windows Server 2012 R2, in advance, you need to create the certificates on Windows 10 or Windows Server 2016 or Windows Server 2019.
+If host servers are Windows Server 2012 R2, in advance, you need to create the certificates on Windows 10 or Windows Server 2016 or Windows Server 2019.
+
+If host servers are Windows Server 2016 or later, you don't need to create certificates in advance.
 
 1. Edit **config.bat** in **makecert**
   - Each values must be identical with each values in **glocal_config.bat**
@@ -280,26 +285,40 @@ If you use Windows Server 2012 R2, in advance, you need to create the certificat
   - **setup_Hyper-VReplica_Primary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Primary` on primary server
   - **setup_Hyper-VReplica_Secondary.bat** in `AutoScripts\tool2\setup_Hyper-VReplica_Secondary` on secondary server
 4. Enable Hyper-V Replica on both servers
-  - Open **Hyper-V Manager**
-  - Right-click server name
-  - Click **Hyper-V Settings**
-  - Click **Replication Configuration**
-  - Check **Enable this computer as a Replica server**
-  - Check **Use certificate-based Authentication (HTTPS):**
-  - Click **Select Certificate**
-  - Click **OK** in Select certificate dialog
-  - Check **Allow replication from any authenticated server**
-  - Click **Apply**
-  - Click **OK** in Settings dialog
-  - Click **OK**
-5. Execute **tool3** on primary server
+  - If both servers belong to Windows domain
+    - Open **Hyper-V Manager**
+    - Right-click server name
+    - Click **Hyper-V Settings**
+    - Click **Replication Configuration**
+    - Check **Enable this computer as a Replica server**
+    - Check **Use Kerberos (HTTP):**
+    - Check **Allow replication from any authenticated server**
+    - Click **Apply**
+    - Click **OK** in Settings dialog
+    - Click **OK**
+  - If both servers do NOT belong to Windows domain
+    - Open **Hyper-V Manager**
+    - Right-click server name
+    - Click **Hyper-V Settings**
+    - Click **Replication Configuration**
+    - Check **Enable this computer as a Replica server**
+    - Check **Use certificate-based Authentication (HTTPS):**
+    - Click **Select Certificate**
+    - Click **OK** in Select certificate dialog
+    - Check **Allow replication from any authenticated server**
+    - Click **Apply**
+    - Click **OK** in Settings dialog
+    - Click **OK**
+5. Confirm Firewall setting on both servers
+6. Execute **tool3** on primary server
   - **start_VMreplication.bat** in `AutoScripts\tool3\start_VMreplication_Primary`
-6. Execute **tool4**
+7. Execute **tool4**
   - Without Router VM
     - **setup_network_Secondary.bat** in `AutoScripts\tool4\setup_network_Secondary` on secondary server
-7. Execute **tool5** on primary server
+8. Execute **tool5** on primary server
   - **setup_ecx_Primary.bat** in `AutoScripts\tool5\setup_ecx_Primary`
-8. Execute **tool6** on secondary server
+  - After this step, failover group will start, but Application VMs will not start. They will start after next step.
+9. Execute **tool6** on secondary server
   - **setup_ecx_Secondary.bat** in `AutoScripts\tool6\setup_ecx_Secondary`
 
 ### Execute Automation-tool (Windows Server 2016 or later)

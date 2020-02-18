@@ -4,6 +4,7 @@ $pHostname = $env:PRIMARY_HOSTNAME
 $pIp = $env:PRIMARY_IP_ADDRESS
 $sHostname = $env:SECONDARY_HOSTNAME
 $sIp = $env:SECONDARY_IP_ADDRESS
+$domain = $env:DOMAIN
 $vmNum = $env:APP_VM_NUM
 $tmp1 = $env:APP_VM_NAME1
 $tmp2 = $env:APP_VM_NAME2
@@ -40,6 +41,8 @@ for ($i = 0; $i -lt $vmNum; $i++) {
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_TARGET_VM_NAME",$targetVM[$i]
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_FAILOVER_NAME",$failover[$i]
+    $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
+    $file_contents = $(Get-Content $file_path) -creplace "INPUT_DOMAIN_NAME",$domain
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
 
     # Edit start.bat
@@ -160,6 +163,9 @@ for ($i = 0; $i -lt $vmNum; $i++) {
                         <fo2>0</fo2>
                       </threshold>
                     </emergency>
+                    <parameters>
+                      <waitstop>1</waitstop>
+                    </parameters>
                   </genw>"
     $replaceTarget = "<GENW" + ($i + 1) + ">"
 
