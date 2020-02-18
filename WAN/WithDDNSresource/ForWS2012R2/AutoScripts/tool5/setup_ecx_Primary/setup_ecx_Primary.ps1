@@ -1,3 +1,5 @@
+# Feb 19 2020
+
 $lcnsPath = $env:LCNS_PATH
 $product = $env:ECX_OR_CLP
 $pHostname = $env:PRIMARY_HOSTNAME

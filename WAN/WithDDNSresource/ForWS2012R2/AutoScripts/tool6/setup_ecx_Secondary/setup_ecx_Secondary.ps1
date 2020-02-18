@@ -1,3 +1,5 @@
+# Feb 19 2020
+
 $product = $env:ECX_OR_CLP
 $vmNum = $env:APP_VM_NUM
 $tmp1 = $env:APP_VM_NAME1

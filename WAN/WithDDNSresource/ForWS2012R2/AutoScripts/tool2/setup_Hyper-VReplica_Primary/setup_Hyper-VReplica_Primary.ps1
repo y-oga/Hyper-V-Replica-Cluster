@@ -1,3 +1,5 @@
+# Feb 19 2020
+
 $hostnameP = $env:PRIMARY_HOSTNAME
 $hostnameS = $env:SECONDARY_HOSTNAME
 $ipP = $env:PRIMARY_IP_ADDRESS

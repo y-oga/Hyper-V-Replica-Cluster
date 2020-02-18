@@ -1,3 +1,5 @@
+rem Feb 19 2020
+
 set ECX_PATH=C:\Users\Administrator\Downloads\ecx\ecx41w_x64\ecx41w_x64
 set PRIMARY_HOSTNAME=WS2012R2-1
 set PRIMARY_IP_ADDRESS=192.168.0.235

@@ -1,3 +1,5 @@
+# Feb 19 2020
+
 $vmNum = $env:APP_VM_NUM
 $appVmName = @($env:APP_VM_NAME1,
             $env:APP_VM_NAME2, 

@@ -1,3 +1,5 @@
+# Feb 19 2020
+
 $ecxSilentInstallPath = $env:ECX_PATH + "\Windows\4.1\common\server\x64\silent-install.bat"
 $hostnameP = $env:PRIMARY_HOSTNAME
 $hostnameS = $env:SECONDARY_HOSTNAME
