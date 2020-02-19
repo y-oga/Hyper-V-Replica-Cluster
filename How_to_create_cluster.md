@@ -49,7 +49,7 @@ You can create a cluster both in LAN and in WAN.
 
       The packet from externel to Application VM is routed via NAT in a host server. 
 
-      After setting a cluster following this document, please follow <a href="test">WithDDNSresource.md</a>
+      After setting a cluster following this document, please follow <a href="https://github.com/y-oga/Setup-Cluster-with-Hyper-V-Replica-and-RouterVM/blob/master/WAN/WithDDNSresource/WithDDNSresource.md">WithDDNSresource.md</a>
 
       ```
       (Internet)
