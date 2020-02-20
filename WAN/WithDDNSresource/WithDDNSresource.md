@@ -27,7 +27,7 @@
         - Click **Next**
     - Click **Finish**
 
-5. Setup NAT
+5. Setup NAT on both servers
     - Open **Routing and Remote Access**
     - Right-click the public interface in NAT list and click **Properties**.
     - In **Services and Ports**, add NAT settings for each VMs.
