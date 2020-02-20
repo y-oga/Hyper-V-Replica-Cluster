@@ -132,7 +132,7 @@ try {
 }
 if (($ownRep.State -eq "Replicating") -And ($oppRep.State -eq "Replicating") -And ($ownRep.Mode -eq "Primary")) {
     $ownVM = Get-VM -Name $targetVMName
-    if ($ownVM.State -eq "Running") {
+    if ($ownVM.State -eq "Off") {
         Start-VM -VMName $targetVMName -Confirm:$False
     }
     exit 0
