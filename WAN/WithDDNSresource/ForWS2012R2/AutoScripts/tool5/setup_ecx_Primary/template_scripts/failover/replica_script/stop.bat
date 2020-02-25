@@ -2,7 +2,7 @@ rem ***************************************
 rem *              stop.bat               *
 rem *                                     *
 rem * title   : stop script file sample   *
-rem * date    : 2020/02/10                *
+rem * date    : 2020/02/25                *
 rem * version : 9.0.3-1                   *
 rem ***************************************
 
@@ -38,7 +38,9 @@ rem Routine procedure
 rem *************
 
 armload INPUT_REPSTOP /U Administrator /W powershell.exe .\stop.ps1
-armkill INPUT_REPSTOP
+armgetcd INPUT_RETURNSTOP
+set ret=%ERRORLEVEL%
+if %ret% equ 2 exit 1
 
 rem Priority check
 IF "%CLP_SERVER%" == "OTHER" GOTO ON_OTHER1
@@ -75,7 +77,9 @@ rem Starting applications/services and recovering process after failover
 rem *************
 
 armload INPUT_REPSTOP /U Administrator /W powershell.exe .\stop.ps1
-armkill INPUT_REPSTOP
+armgetcd INPUT_RETURNSTOP
+set ret=%ERRORLEVEL%
+if %ret% equ 2 exit 1
 
 rem Priority check
 IF "%CLP_SERVER%" == "OTHER" GOTO ON_OTHER2

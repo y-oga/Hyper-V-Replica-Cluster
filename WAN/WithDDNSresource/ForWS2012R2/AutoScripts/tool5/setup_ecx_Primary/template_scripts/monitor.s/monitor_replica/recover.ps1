@@ -1,17 +1,13 @@
 #
-# Feb 19 2020
+# Feb 25 2020
 #
+$monNumber = $env:MONITOR_NUMBER
+$returnVal = "RETURNGENW" + $monNumber
+armsetcd $returnVal 1
 
 $hostname = hostname
 $group = $env:FAILOVER_NAME
 $active_srv = clpgrp -n $group
-
-#
-# This script is executed only on active server.
-#
-if ($hostname -ne $active_srv) {
-    exit 0
-}
 
 $targetVMName = $env:TARGET_VM_NAME
 $primaryHostname =  $env:PRIMARY_HOSTNAME
@@ -158,18 +154,37 @@ while (1) {
         # If VM is Off or Saved, turn on the VM.
         #
         if ($ownRep.Mode -eq "Primary") {
-            if (($ownVM.State -eq "Off") -Or ($ownVM.State -eq "Saved") -Or ($ownVM.State -eq "Paused")) {
+            if (($ownVM.State -eq "Saved") -Or ($ownVM.State -eq "Paused")) {
                 try {
+                    $clpmsg = "genw.bat: " + $targetVMName + " state is " + $ownVM.State + "."
+                    clplogcmd -m $clpmsg -l WARN
                     Start-VM -Name $targetVMName -Confirm:$False
+                    $clpmsg = "genw.bat: " + $targetVMName + " has been started."
+                    clplogcmd -m $clpmsg -l INFO
                 } catch {
+                    # $clpmsg = "genw.bat: Start-VM " + $targetVMName + " is failed."
+                    # clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
+            } elseif ($ownVM.State -eq "Off") {
+                $clpmsg = "genw.bat: " + $targetVMName + " has been stopped from outside of cluster."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
+                exit 1
             }
         } elseif ($ownRep.Mode -eq "Replica") {
             if (($oppVM.State -eq "Off") -Or ($oppVM.State -eq "Saved") -Or ($oppVM.State -eq "Paused")) {
                 try {
+                    $clpmsg = "genw.bat: " + $targetVMName + " state is " + $oppVM.State + "."
+                    clplogcmd -m $clpmsg -l WARN
                     Start-VM -Name $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+                    $clpmsg = "genw.bat: " + $targetVMName + " has been started."
+                    clplogcmd -m $clpmsg -l INFO
                 } catch {
+                    $clpmsg = "genw.bat: Start-VM " + $targetVMName + " is failed on " + $oppositeHostname + "."
+                    clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
             }
@@ -207,6 +222,9 @@ while (1) {
                 try {
                     Remove-VMSavedState -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
                 } catch {
+                    $clpmsg = "genw.bat: Remove-VMSavedState " + $targetVMName + " is failed."
+                    clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
             }
@@ -217,6 +235,9 @@ while (1) {
                 $filename = "recover_" + $targetVMName + ".bat"
                 clprexec --script $filename -h $oppositeIp
             } catch {
+                $clpmsg = "genw.bat: recover_" + $targetVMName + ".bat is failed on " + $oppositeHostname + "."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -237,6 +258,9 @@ while (1) {
                 $filename = "recover_" + $targetVMName + ".bat"
                 clprexec --script $filename -h $oppositeIp
             } catch {
+                $clpmsg = "genw.bat: recover_" + $targetVMName + ".bat is failed on " + $oppositeHostname + "."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -258,6 +282,9 @@ while (1) {
                     Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Kerberos" -Confirm:$False
                 }
             } catch {
+                $clpmsg = "genw.bat: Set-VMReplication -Reverse " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -274,6 +301,9 @@ while (1) {
             try {
                 Complete-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Complete-VMFailover " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         }
@@ -285,7 +315,12 @@ while (1) {
             #
             try {
                 Start-VMInitialReplication -VMName $targetVMName -ComputerName $ownFQDN
+                $clpmsg = "genw.bat: " + $targetVMName + " Initial Replication is starting. Do not move a failover group until the initial replication is completed. Replication status can be displayed on Hyper-V Manager."
+                clplogcmd -m $clpmsg -l WARN
             } catch {
+                $clpmsg = "genw.bat: Start-VMInitialReplication " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -305,6 +340,9 @@ while (1) {
             try {
                 Resume-VMReplication -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Resume-VMReplication " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         } else {
@@ -329,12 +367,18 @@ while (1) {
                 try {
                     Remove-VMSavedState -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
                 } catch {
+                    $clpmsg = "genw.bat: Remove-VMSavedState " + $targetVMName + " is failed."
+                    clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
             }
             try {
                 Stop-VMFailover -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Stop-VMFailover " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         }
@@ -349,8 +393,15 @@ while (1) {
             #
             if ($oppVM.State -eq "Saved") {
                 try {
+                    $clpmsg = "genw.bat: " + $targetVMName + " state is " + $oppVM.State + "."
+                    clplogcmd -m $clpmsg -l WARN
                     Start-VM -Name $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
+                    $clpmsg = "genw.bat: " + $targetVMName + " has been started."
+                    clplogcmd -m $clpmsg -l INFO
                 } catch {
+                    $clpmsg = "genw.bat: Start-VM " + $targetVMName + " is failed on " + $oppositeHostname + "." 
+                    clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
             }
@@ -358,6 +409,9 @@ while (1) {
             try {
                 Resume-VMReplication -VMName $targetVMName -ComputerName $oppositeFQDN -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Resume-VMReplication " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -371,6 +425,9 @@ while (1) {
                     try {
                         Stop-VM -Name $targetVMName -ComputerName $oppositeFQDN -Confirm:$False -Force
                     } catch {
+                        $clpmsg = "genw.bat: Stop-VM " + $targetVMName + " is failed on " + $oppositeHostname + "."
+                        clplogcmd -m $clpmsg -l ERR
+                        armsetcd $returnVal 2
                         exit 1
                     }
                 }
@@ -408,6 +465,9 @@ while (1) {
                 $filename = "recover_" + $targetVMName + ".bat"
                 clprexec --script $filename -h $oppositeIp
             } catch {
+                $clpmsg = "genw.bat: recover_" + $targetVMName + ".bat is failed on " + $oppositeHostname + "."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 
@@ -426,6 +486,9 @@ while (1) {
             try {
                 Resume-VMReplication -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Resume-VMReplication " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         }
@@ -436,6 +499,9 @@ while (1) {
         try {
             Resume-VMReplication -VMName $targetVMName -ComputerName $ownFQDN -Resynchronize -Confirm:$False
         } catch {
+            $clpmsg = "genw.bat: Resume-VMReplication " + $targetVMName + " is failed."
+            clplogcmd -m $clpmsg -l ERR
+            armsetcd $returnVal 2
             exit 1
         }
     } elseif ($ownRep.State -eq "FailedOver") {
@@ -446,6 +512,9 @@ while (1) {
             try {
                 Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Certificate" -CertificateThumbprint $ownThumbprint -Confirm:$False
             } catch {
+                $clpmsg = "genw.bat: Set-VMReplication -Reverse " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 

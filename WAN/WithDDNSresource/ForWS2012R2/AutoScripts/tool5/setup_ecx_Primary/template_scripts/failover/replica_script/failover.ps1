@@ -1,6 +1,9 @@
 #
-# Feb 19 2020
+# Feb 25 2020
 #
+$monNumber = $env:MONITOR_NUMBER
+$returnVal = "RETURNSTART" + $monNumber
+armsetcd $returnVal 0
 
 $hostname = hostname
 $group = $env:FAILOVER_NAME
@@ -107,11 +110,24 @@ if ($tmpPName -eq $primaryHostname) {
 try {
     Start-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
 } catch {
+    $clpmsg = "failover.bat: Start-VMFailover " + $targetVMName + " is failed."
+    clplogcmd -m $clpmsg -l ERR
+    armsetcd $returnVal 2
     exit 1
 }
 
-try {
-    Start-VM -VMName $targetVMName -Confirm:$False
-} catch {
-    exit 1
+while ($true) {
+    try {
+        Start-VM -VMName $targetVMName -Confirm:$False
+    } catch {
+        $clpmsg = "failover.bat: Start-VM " + $targetVMName + " is failed."
+        clplogcmd -m $clpmsg -l ERR
+        armsetcd $returnVal 2
+        exit 1
+    }
+
+    $ownVM = Get-VM -VMName $targetVMName -ComputerName $ownFQDN -ErrorAction stop
+    if ($ownVM.State -eq "Running") {
+        break
+    }
 }

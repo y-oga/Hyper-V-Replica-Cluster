@@ -1,6 +1,9 @@
 #
-# Feb 19 2020
+# Feb 25 2020
 #
+$monNumber = $env:MONITOR_NUMBER
+$returnVal = "RETURNSTART" + $monNumber
+armsetcd $returnVal 1
 
 $hostname = hostname
 $group = $env:FAILOVER_NAME
@@ -118,24 +121,44 @@ try {
             try {
                 Start-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "start.bat: Start-VMFailover " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         }
 
-        try {
-            Start-VM -VMName $targetVMName -Confirm:$False
-        } catch {
-            exit 1
+        while ($true) {
+            try {
+                Start-VM -VMName $targetVMName -Confirm:$False
+            } catch {
+                $clpmsg = "start.bat: Start-VM " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
+                exit 1
+            }
+            $ownVM = Get-VM -Name $targetVMName
+            if ($ownVM.State -eq "Running") {
+                exit 0
+            }
         }
-        exit 0
     }
 }
 if (($ownRep.State -eq "Replicating") -And ($oppRep.State -eq "Replicating") -And ($ownRep.Mode -eq "Primary")) {
-    $ownVM = Get-VM -Name $targetVMName
-    if ($ownVM.State -eq "Off") {
-        Start-VM -VMName $targetVMName -Confirm:$False
+    while ($true) {
+        try {
+            Start-VM -VMName $targetVMName -Confirm:$False
+        } catch {
+            $clpmsg = "start.bat: Start-VM " + $targetVMName + " is failed."
+            clplogcmd -m $clpmsg -l ERR
+            armsetcd $returnVal 2
+            exit 1
+        }
+        $ownVM = Get-VM -Name $targetVMName
+        if ($ownVM.State -eq "Running") {
+            exit 0
+        }
     }
-    exit 0
 }
 
 #
@@ -156,6 +179,9 @@ while (1) {
         try {
             Stop-VM $targetVMName -ComputerName $oppositeFQDN -Confirm:$False -Force
         } catch {
+            $clpmsg = "start.bat: Stop-VM " + $targetVMName + " is failed on " + $oppositeHostname + "."
+            clplogcmd -m $clpmsg -l ERR
+            armsetcd $returnVal 2
             exit 1
         }
         while (1) {
@@ -173,10 +199,19 @@ while (1) {
                     #
                     # Failover STEP 5/5
                     #
-                    try {
-                        Start-VM -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
-                    } catch {
-                        exit 1
+                    while ($true) {
+                        try {
+                            Start-VM -VMName $targetVMName -Confirm:$False
+                        } catch {
+                            $clpmsg = "start.bat: Start-VM " + $targetVMName + " is failed."
+                            clplogcmd -m $clpmsg -l ERR
+                            armsetcd $returnVal 2
+                            exit 1
+                        }
+                        $ownVM = Get-VM -Name $targetVMName
+                        if ($ownVM.State -eq "Running") {
+                            exit 0
+                        }
                     }
                 }
                 #
@@ -190,6 +225,9 @@ while (1) {
                 try {
                     Start-VMFailover -VMName $targetVMName -ComputerName $oppositeFQDN -Prepare -Confirm:$False
                 } catch {
+                    $clpmsg = "start.bat: Start-VMFailover " + $targetVMName + " is failed."
+                    clplogcmd -m $clpmsg -l ERR
+                    armsetcd $returnVal 2
                     exit 1
                 }
             }
@@ -200,6 +238,9 @@ while (1) {
             try {
                 Start-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "start.bat: Start-VMFailover " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         } elseif ($oppRep.State -eq "WaitingForStartResynchronize") {
@@ -217,6 +258,9 @@ while (1) {
             try {
                 Complete-VMFailover -VMName $targetVMName -ComputerName $ownFQDN -Confirm:$False
             } catch {
+                $clpmsg = "start.bat: Complete-VMFailover " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
         }
@@ -232,6 +276,9 @@ while (1) {
                     Set-VMReplication -VMName $targetVMName -Reverse -ReplicaServerName $oppositeFQDN -ComputerName $ownFQDN -AuthenticationType "Kerberos" -Confirm:$False
                 }
             } catch {
+                $clpmsg = "start.bat: Set-VMReplication -Reverse " + $targetVMName + " is failed."
+                clplogcmd -m $clpmsg -l ERR
+                armsetcd $returnVal 2
                 exit 1
             }
 

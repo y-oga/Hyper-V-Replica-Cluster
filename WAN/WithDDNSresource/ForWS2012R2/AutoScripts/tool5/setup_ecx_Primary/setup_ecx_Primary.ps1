@@ -1,4 +1,4 @@
-# Feb 19 2020
+# Feb 25 2020
 
 $lcnsPath = $env:LCNS_PATH
 $product = $env:ECX_OR_CLP
@@ -46,6 +46,9 @@ for ($i = 0; $i -lt $vmNum; $i++) {
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_DOMAIN_NAME",$domain
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
+    $monNumber = $i + 1
+    $file_contents = $(Get-Content $file_path) -creplace "INPUT_MONITOR_NUMBER",$monNumber
+    $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
 
     # Edit start.bat
     $file_path = $output_path + "\start.bat"
@@ -55,11 +58,17 @@ for ($i = 0; $i -lt $vmNum; $i++) {
     $insertData = "REPFAILOVER" + ($i + 1)
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_REPFAILOVER",$insertData
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
+    $insertData = "RETURNSTART" + ($i + 1)
+    $file_contents = $(Get-Content $file_path) -creplace "INPUT_RETURNSTART",$insertData
+    $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
 
     # Edit stop.bat
     $file_path = $output_path + "\stop.bat"
     $insertData = "REPSTOP" + ($i + 1)
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_REPSTOP",$insertData
+    $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
+    $insertData = "RETURNSTOP" + ($i + 1)
+    $file_contents = $(Get-Content $file_path) -creplace "INPUT_RETURNSTOP",$insertData
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
 
     # Edit Monitor script
@@ -77,6 +86,9 @@ for ($i = 0; $i -lt $vmNum; $i++) {
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
     $tmp = "REPRECOVER" + ($i + 1)
     $file_contents = $(Get-Content $file_path) -creplace "INPUT_REPRECOVER",$tmp
+    $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
+    $insertData = "RETURNGENW" + ($i + 1)
+    $file_contents = $(Get-Content $file_path) -creplace "INPUT_RETURNGENW",$insertData
     $file_contents | Out-String | % { [Text.Encoding]::UTF8.GetBytes($_) } | Set-Content -Path $file_path -Encoding Byte
 
     # Edit trnreq script
@@ -161,8 +173,8 @@ for ($i = 0; $i -lt $vmNum; $i++) {
                         <migration>0</migration>
                       </prefailover>
                       <threshold>
-                        <restart>0</restart>
-                        <fo2>0</fo2>
+                        <restart>1</restart>
+                        <fo2>1</fo2>
                       </threshold>
                     </emergency>
                     <parameters>

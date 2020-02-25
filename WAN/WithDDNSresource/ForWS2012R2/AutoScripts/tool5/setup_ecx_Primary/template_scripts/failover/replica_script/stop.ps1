@@ -1,6 +1,9 @@
 #
-# Feb 19 2020
+# Feb 25 2020
 #
+$monNumber = $env:MONITOR_NUMBER
+$returnVal = "RETURNSTOP" + $monNumber
+armsetcd $returnVal 0
 
 $hostname = hostname
 $group = $env:FAILOVER_NAME
@@ -107,8 +110,12 @@ while ($true) {
     try {
         Stop-VM $targetVMName -Confirm:$False -Force
     } catch {
+        $clpmsg = "stop.bat: Stop-VM " + $targetVMName + " is failed."
+        clplogcmd -m $clpmsg -l ERR
+        armsetcd $returnVal 2
         exit 1
     }
+    
     $ownVM = Get-VM -VMName $targetVMName -ComputerName $ownFQDN -ErrorAction stop
     if ($ownVM.State -eq "Off") {
         break
